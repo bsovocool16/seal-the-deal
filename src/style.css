@@ -262,3 +262,8 @@ table.num tr.off td { color: #a39a85; text-decoration: line-through; }
 .pbtn.doom-btn { background: #7a1010 !important; color: #ffd84a !important; border-color: #ff4a2a !important; animation: doompulse 1.6s ease-in-out infinite; }
 @keyframes doompulse { 50% { box-shadow: 0 0 14px #ff4a2a; } }
 @media (prefers-reduced-motion: reduce) { .pbtn.doom-btn { animation: none; } }
+.claim { border: 3px dashed #c9a227; background: #fff7d6; padding: 12px 14px; margin: 12px 0; }
+.claim-h { font-family: var(--font-px); font-size: 11px; line-height: 1.6; color: #7a1010; margin-bottom: 6px; }
+.claim ol { margin: 6px 0 8px 20px; padding: 0; }
+.claim-ts { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; font-size: 18px; margin: 6px 0; overflow-wrap: anywhere; }
+.claim-ts span { color: var(--ink-soft); }
