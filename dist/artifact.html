@@ -9,6 +9,8 @@
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:creator" content="@bensovocool">
+<meta name="twitter:site" content="@bensovocool">
 <meta name="twitter:title" content="Seal the Deal">
 <meta name="twitter:description" content="A game about very fair transactions and the people that make them so.">
 <meta name="twitter:image" content="https://bsovocool16.github.io/seal-the-deal/og.png">
@@ -275,7 +277,7 @@ table.num tr.off td { color: #a39a85; text-decoration: line-through; }
       </ol>
     </div>
     <div class="diffs" id="diffs"></div>
-    <p class="fine">A work of satire. All companies, deals and people are made up. Nothing here is advice, financial or moral.<br>Made by <a href="https://github.com/bsovocool16" target="_blank" rel="noopener">@bsovocool16</a> · <a href="https://github.com/bsovocool16/seal-the-deal" target="_blank" rel="noopener">source on GitHub</a></p>
+    <p class="fine">A work of satire. All companies, deals and people are made up. Nothing here is advice, financial or moral.<br>Made by <a href="https://x.com/bensovocool" target="_blank" rel="noopener">@bensovocool</a> · <a href="https://github.com/bsovocool16/seal-the-deal" target="_blank" rel="noopener">source on GitHub</a></p>
   </div>
 </section>
 
@@ -1413,7 +1415,7 @@ if (typeof module !== 'undefined') module.exports = { line, DIFF, COST, DEALS, i
       <p>${esc(tier)}</p>
       ${total > best ? '<p class="scribble">New personal best on ' + d.label + '.</p>' : best ? `<p class="hint">Your best on ${d.label}: ${best}</p>` : ''}
       <div class="modal-actions"><a class="pbtn" id="m-tweet" href="${tweetUrl(bonus, d)}" target="_blank" rel="noopener">SHARE ON X</a><button class="pbtn alt" id="m-copy">COPY SCORE</button><button class="pbtn" id="m-again">PLAY AGAIN</button><button class="pbtn alt" id="m-title">CHANGE DIFFICULTY</button></div>
-      <p class="credit">Made by <a href="https://github.com/bsovocool16" target="_blank" rel="noopener">@bsovocool16</a> · <a href="https://github.com/bsovocool16/seal-the-deal" target="_blank" rel="noopener">source on GitHub</a></p>`);
+      <p class="credit">Made by <a href="https://x.com/bensovocool" target="_blank" rel="noopener">@bensovocool</a> · <a href="https://github.com/bsovocool16/seal-the-deal" target="_blank" rel="noopener">source on GitHub</a></p>`);
     $('m-copy').onclick = () => {
       const txt = shareText(bonus, d) + ' ' + SITE;
       const fail = () => { $('m-copy').textContent = 'COPY FAILED'; };
@@ -1430,7 +1432,7 @@ if (typeof module !== 'undefined') module.exports = { line, DIFF, COST, DEALS, i
     return `I made 5 terrible deals "fair, from a financial point of view" on ${d.label} in Seal the Deal. Grades: ${grades}. Bonus: $${bonus.toLocaleString()}.` + (mds ? ` The MD had to sign ${mds} himself.` : '');
   }
   function tweetUrl(bonus, d) {
-    return 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(shareText(bonus, d)) + '&url=' + encodeURIComponent(SITE);
+    return 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(shareText(bonus, d)) + '&url=' + encodeURIComponent(SITE) + '&via=bensovocool';
   }
 
   // ---------- modal ----------

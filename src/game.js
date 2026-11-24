@@ -661,7 +661,7 @@
       <p>${esc(tier)}</p>
       ${total > best ? '<p class="scribble">New personal best on ' + d.label + '.</p>' : best ? `<p class="hint">Your best on ${d.label}: ${best}</p>` : ''}
       <div class="modal-actions"><a class="pbtn" id="m-tweet" href="${tweetUrl(bonus, d)}" target="_blank" rel="noopener">SHARE ON X</a><button class="pbtn alt" id="m-copy">COPY SCORE</button><button class="pbtn" id="m-again">PLAY AGAIN</button><button class="pbtn alt" id="m-title">CHANGE DIFFICULTY</button></div>
-      <p class="credit">Made by <a href="https://github.com/bsovocool16" target="_blank" rel="noopener">@bsovocool16</a> · <a href="https://github.com/bsovocool16/seal-the-deal" target="_blank" rel="noopener">source on GitHub</a></p>`);
+      <p class="credit">Made by <a href="https://x.com/bensovocool" target="_blank" rel="noopener">@bensovocool</a> · <a href="https://github.com/bsovocool16/seal-the-deal" target="_blank" rel="noopener">source on GitHub</a></p>`);
     $('m-copy').onclick = () => {
       const txt = shareText(bonus, d) + ' ' + SITE;
       const fail = () => { $('m-copy').textContent = 'COPY FAILED'; };
@@ -678,7 +678,7 @@
     return `I made 5 terrible deals "fair, from a financial point of view" on ${d.label} in Seal the Deal. Grades: ${grades}. Bonus: $${bonus.toLocaleString()}.` + (mds ? ` The MD had to sign ${mds} himself.` : '');
   }
   function tweetUrl(bonus, d) {
-    return 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(shareText(bonus, d)) + '&url=' + encodeURIComponent(SITE);
+    return 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(shareText(bonus, d)) + '&url=' + encodeURIComponent(SITE) + '&via=bensovocool';
   }
 
   // ---------- modal ----------
