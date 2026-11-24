@@ -705,7 +705,7 @@
       sc.grade = lostFight ? 'F' : sc.pts >= 700 ? 'A' : sc.pts >= 600 ? 'B' : sc.pts >= 480 ? 'C' : 'D';
       sc.label = lostFight ? 'Buried in redlines; MD signed over you' : fight.skipped ? 'MD "handled" the committee' : { A: 'Committee overruled by force', B: 'Committee overruled by force', C: 'Committee overruled by force', D: 'Barely overruled the committee' }[sc.grade];
     }
-    G.results.push({ id: deal.id, name: deal.name, pts: sc.pts, grade: sc.grade, plaus: md ? 0 : pl.score, md, spent: G.spent });
+    G.results.push({ id: deal.id, name: deal.name, pts: sc.pts, grade: sc.grade, plaus: md ? 0 : pl.score, md, spent: G.spent, overruled: !!(fight && fight.win) });
     if (md) { sfx.bad(); setTimeout(sfx.stamp, 400); say(pick(LINES.takeover), true); }
     else { sfx.stamp(); setTimeout(sfx.win, 300); say(pick(LINES.approve)); }
     const last = G.dealIdx === DEALS.length - 1;
@@ -732,6 +732,7 @@
     const head = avgPl >= 75 ? 'FIVE DEALS CLOSE; NOBODY READS THE PROXY' : avgPl >= 55 ? 'CHANCERY COURT CALLS BANKER\'S ANALYSIS "CREATIVE BUT NOT ACTIONABLE"' : 'CHANCELLOR: TERMINAL VALUE "IMPLIES THE COMPANY OUTGROWS THE SUN"';
     const best = store.get('best:' + d.key) || 0;
     if (total > best) store.set('best:' + d.key, total);
+    const claim = d.key === 'hard' && G.results.length === DEALS.length && !G.results.some((x) => x.md || x.overruled) ? dealToyClaim(total, avgPl) : null;
     showModal(`<h2>YEAR-END REVIEW</h2>
       <p>Every deal was fair. Every single one. What are the odds.</p>
       <div class="tbl-wrap"><table class="num"><thead><tr><th>Deal</th><th>Grade</th><th>Smell</th><th>Points</th></tr></thead><tbody>
@@ -741,6 +742,7 @@
       <div class="score"><span>Your bonus</span><span class="g">$${bonus.toLocaleString()}</span><span>HR says</span><span></span></div>
       <p>${esc(tier)}</p>
       ${total > best ? '<p class="scribble">New personal best on ' + d.label + '.</p>' : best ? `<p class="hint">Your best on ${d.label}: ${best}</p>` : ''}
+      ${claim ? claim.html : ''}
       <div class="modal-actions"><a class="pbtn" id="m-tweet" href="${tweetUrl(bonus, d)}" target="_blank" rel="noopener">SHARE ON X</a><button class="pbtn alt" id="m-copy">COPY SCORE</button><button class="pbtn" id="m-again">PLAY AGAIN</button><button class="pbtn alt" id="m-title">CHANGE DIFFICULTY</button></div>
       <p class="credit">Made by <a href="https://x.com/bensovocool" target="_blank" rel="noopener">@bensovocool</a> · <a href="https://github.com/bsovocool16/seal-the-deal" target="_blank" rel="noopener">source on GitHub</a></p>`);
     $('m-copy').onclick = () => {
@@ -748,8 +750,41 @@
       const fail = () => { $('m-copy').textContent = 'COPY FAILED'; };
       try { navigator.clipboard.writeText(txt).then(() => { $('m-copy').textContent = 'COPIED'; }, fail); } catch (e) { fail(); }
     };
+    if (claim) $('m-claim-copy').onclick = () => {
+      const fail = () => { $('m-claim-copy').textContent = 'COPY FAILED'; };
+      try { navigator.clipboard.writeText(claim.text).then(() => { $('m-claim-copy').textContent = 'COPIED'; }, fail); } catch (e) { fail(); }
+    };
     $('m-again').onclick = () => { hideModal(); start(G.diff); };
     $('m-title').onclick = () => { hideModal(); toTitle(); };
+  }
+
+  // ---------- Hard-mode deal toy bounty ----------
+  const CLAIM_EMAIL = 'benjamin.sovocool@gmail.com';
+  function claimCode(s) { let h = 0x811c9dc5; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; } return h.toString(16).toUpperCase().padStart(8, '0'); }
+  function dealToyClaim(total, avgPl) {
+    const now = new Date();
+    const iso = now.toISOString();
+    const local = now.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'long' });
+    const mins = G.startedAt ? Math.round((now - G.startedAt) / 60000) : null;
+    const grades = G.results.map((x) => x.grade).join('');
+    const over = G.results.filter((x) => x.overruled).length;
+    const code = claimCode([iso, grades, total, avgPl, over].join('|'));
+    const text = [
+      'SEAL THE DEAL: HARD MODE CLEARED',
+      'Finished (UTC): ' + iso,
+      'Finished (local): ' + local,
+      mins != null ? 'Run length: ' + mins + ' min' : '',
+      'Grades: ' + grades + ' | Points: ' + total + ' | Avg smell test: ' + avgPl + (over ? ' | Committees overruled: ' + over : ''),
+      'Claim code: ' + code,
+    ].filter(Boolean).join('\n');
+    const mail = 'mailto:' + CLAIM_EMAIL + '?subject=' + encodeURIComponent('Seal the Deal: Hard mode cleared ' + iso) + '&body=' + encodeURIComponent(text + '\n\n(Screenshot attached.)');
+    const html = `<div class="claim"><div class="claim-h">YOU BEAT HARD MODE. THE FIRST PERSON TO DO IT GETS A REAL LUCITE DEAL TOY.</div>
+      <ol><li>Screenshot this whole screen now. The timestamp below is your proof of when you finished.</li>
+      <li>DM <a href="https://x.com/bensovocool" target="_blank" rel="noopener">@bensovocool</a> on X, or email <a href="${mail}">${CLAIM_EMAIL}</a>, with the screenshot and the claim details.</li></ol>
+      <div class="claim-ts"><span>Finished (UTC)</span><b>${esc(iso)}</b><span>Your time</span><b>${esc(local)}</b>${mins != null ? `<span>Run length</span><b>${mins} min</b>` : ''}<span>Claim code</span><b>${code}</b></div>
+      <div class="modal-actions"><a class="pbtn" href="${mail}">EMAIL MY CLAIM</a><a class="pbtn alt" href="https://x.com/bensovocool" target="_blank" rel="noopener">DM ON X</a><button class="pbtn alt" id="m-claim-copy">COPY CLAIM DETAILS</button></div>
+      <p class="hint">Earliest timestamp wins. Bring the screenshot.</p></div>`;
+    return { html, text };
   }
 
   const SITE = 'https://bsovocool16.github.io/seal-the-deal/';
@@ -783,7 +818,7 @@
     $('m-go').onclick = () => { hideModal(); G.tab = 'dcf'; render(); sfx.note(); };
   }
   function start(diffKey) {
-    G = newRun(diffKey);
+    G = newRun(diffKey); G.startedAt = new Date();
     $('scr-title').hidden = true; $('scr-game').hidden = false;
     startDeal(0);
     window.scrollTo(0, 0);
