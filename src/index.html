@@ -29,6 +29,7 @@
       <span class="logo-1">SEAL</span><span class="logo-2">THE</span><span class="logo-3">DEAL</span>
     </div>
     <p class="tagline">Every deal is fair. Eventually.</p>
+    <div class="jukebox" aria-label="Music"><span class="lbl">MUSIC</span><button id="mus-prev" class="ghost" aria-label="Previous track">◀</button><button id="mus-name" class="ghost jb-name">♪ PLAY</button><button id="mus-next" class="ghost" aria-label="Next track">▶</button></div>
     <div class="title-boss"><canvas id="boss-title" width="48" height="52"></canvas>
       <div class="bubble bubble-title">Kid, I don't care if it's a dog. By 7 AM it's FAIR.</div></div>
     <div class="howto paper">
@@ -41,6 +42,7 @@
       </ol>
     </div>
     <div class="diffs" id="diffs"></div>
+    <div class="super-row"><span class="super-note">Secret level: if the committee kicks you back, refuse to accept it.</span><button id="btn-doom" class="pbtn">PLAY THE DOOMWAD ONLY</button></div>
     <p class="fine">A work of satire. All companies, deals and people are made up. Nothing here is advice, financial or moral.<br>Made by <a href="https://x.com/bensovocool" target="_blank" rel="noopener">@bensovocool</a> · <a href="https://github.com/bsovocool16/seal-the-deal" target="_blank" rel="noopener">source on GitHub</a></p>
   </div>
 </section>
@@ -50,7 +52,7 @@
   <header class="hud">
     <div class="hud-deal"><span id="hud-ticker" class="ticker">JRKY</span><span id="hud-name">Gristle &amp; Sons</span><span id="hud-side" class="side">SELL-SIDE</span></div>
     <div class="hud-clock"><span class="lbl">TIME</span><span id="hud-time" class="clock">10:00 PM</span><div class="tbar"><div id="hud-tbar"></div></div><span class="lbl">BOARD CALL 7:00 AM</span></div>
-    <div class="hud-right"><span class="lbl">DEAL</span><span id="hud-dealno">1/5</span><button id="btn-mute" class="ghost" aria-label="Toggle sound">SND:ON</button></div>
+    <div class="hud-right"><span class="lbl">DEAL</span><span id="hud-dealno">1/5</span><button id="btn-music" class="ghost" aria-label="Change music">♪ MUSIC</button><button id="btn-mute" class="ghost" aria-label="Toggle sound effects">SFX:ON</button></div>
   </header>
   <div class="layout">
     <aside class="side-col">
@@ -84,4 +86,6 @@
 <!-- MODAL -->
 <div id="modal" class="modal" hidden><div class="modal-inner paper" id="modal-inner"></div></div>
 <script>/*ENGINE*/</script>
+<script>/*MUSIC*/</script>
+<script>/*FPS*/</script>
 <script>/*GAME*/</script>
