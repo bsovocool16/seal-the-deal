@@ -2,9 +2,9 @@
 // All $ in millions except per-share values.
 
 const DIFF = {
-  easy:   { key: 'easy',   label: 'EASY',   sub: 'Summer Analyst', minutes: 540, need: 2, needDcf: false, cushion: 0.1, plausMin: 40, waccBand: 3.0, tgrMax: 4.5, tgrMin: 0.0, sensMax: 1.5, casesLocked: false, minMaxOK: true,  penMult: 1.0, startTime: 22 * 60 },
-  medium: { key: 'medium', label: 'MEDIUM', sub: 'First-Year Analyst', minutes: 360, need: 2, needDcf: true,  cushion: 0.3, plausMin: 55, waccBand: 2.0, tgrMax: 3.75, tgrMin: 0.5, sensMax: 1.0, casesLocked: false, minMaxOK: true,  penMult: 1.25,  startTime: 25 * 60 },
-  hard:   { key: 'hard',   label: 'HARD',   sub: 'Third-Year (Up for Associate)', minutes: 300, need: 3, needDcf: true,  cushion: 0.3, plausMin: 60, waccBand: 1.25, tgrMax: 3.25, tgrMin: 1.0, sensMax: 0.75, casesLocked: true,  minMaxOK: false, penMult: 1.5,  startTime: 26 * 60 },
+  easy:   { key: 'easy',   label: 'EASY',   sub: 'Summer Analyst', minutes: 540, need: 2, needDcf: false, cushion: 0.1, plausMin: 40, waccBand: 3.0, tgrBand: 1.5, sensMax: 1.5, casesLocked: false, minMaxOK: true,  penMult: 1.0, startTime: 22 * 60 },
+  medium: { key: 'medium', label: 'MEDIUM', sub: 'First-Year Analyst', minutes: 360, need: 2, needDcf: true,  cushion: 0.3, plausMin: 55, waccBand: 2.0, tgrBand: 1.0, sensMax: 1.0, casesLocked: false, minMaxOK: true,  penMult: 1.25,  startTime: 25 * 60 },
+  hard:   { key: 'hard',   label: 'HARD',   sub: 'Third-Year (Up for Associate)', minutes: 300, need: 3, needDcf: true,  cushion: 0.3, plausMin: 60, waccBand: 1.25, tgrBand: 1.0, sensMax: 0.75, casesLocked: true,  minMaxOK: false, penMult: 1.5,  startTime: 26 * 60 },
 };
 
 // Minutes each kind of action costs on the clock.
@@ -109,7 +109,7 @@ const DEALS = [
     shares: 80, netDebt: 600,
     ltmRev: 2400, ltmMargin: 0.105, sbcPct: 0.006, sbcDefault: 'cash',
     da: 0.025, capex: 0.03, nwc: 0.08, tax: 0.25,
-    wacc: 9.0, tgr: 2.5,
+    wacc: 9.0, tgr: 2.0,
     cases: {
       base:     { label: 'Management Base', growth: [0.08, 0.08, 0.07, 0.06, 0.05], margin: [0.110, 0.115, 0.120, 0.125, 0.130] },
       upside:   { label: 'Board Retreat Case', growth: [0.12, 0.12, 0.10, 0.09, 0.08], margin: [0.12, 0.13, 0.14, 0.145, 0.15] },
@@ -154,7 +154,7 @@ const DEALS = [
     shares: 150, netDebt: 4200,
     ltmRev: 4000, ltmMargin: 0.30, sbcPct: 0.005, sbcDefault: 'cash',
     da: 0.12, capex: 0.11, nwc: 0.02, tax: 0.25,
-    wacc: 8.0, tgr: -1.0,
+    wacc: 8.0, tgr: -0.25,
     cases: {
       base:     { label: 'Management Base', growth: [-0.05, -0.05, -0.04, -0.04, -0.03], margin: [0.30, 0.30, 0.295, 0.29, 0.29] },
       upside:   { label: '"Landline Renaissance" Case', growth: [0.00, 0.01, 0.02, 0.02, 0.02], margin: [0.31, 0.32, 0.33, 0.33, 0.33] },
@@ -342,9 +342,10 @@ function plausibility(deal, st, diff) {
   const add = (pen, text) => { if (pen > 0.01) items.push({ pen, text }); };
   const dw = Math.abs(st.wacc - deal.wacc);
   add(Math.max(0, dw - 0.5) / 0.25 * 5, `WACC ${st.wacc.toFixed(2)}% vs. CAPM ${deal.wacc.toFixed(2)}%`);
-  if (st.tgr > 3.0) add((st.tgr - 3.0) / 0.25 * 6, `Perpetual growth ${st.tgr.toFixed(2)}% beats long-run GDP`);
-  const tgrFloor = Math.min(1.5, deal.tgr - 0.5);
-  if (st.tgr < tgrFloor) add((tgrFloor - st.tgr) / 0.25 * 4, `Perpetual growth ${st.tgr.toFixed(2)}% is gloomier than the company's own outlook`);
+  const dg = st.tgr - deal.tgr;
+  if (dg > 0.5) add((dg - 0.5) / 0.25 * 4, `Perpetual growth ${st.tgr.toFixed(2)}% vs. ${deal.tgr.toFixed(2)}% in the long-range plan`);
+  if (dg < -0.5) add((-dg - 0.5) / 0.25 * 4, `Perpetual growth ${st.tgr.toFixed(2)}% is gloomier than the company's own ${deal.tgr.toFixed(2)}% outlook`);
+  if (st.tgr > 3.0 && dg > 0) add((st.tgr - Math.max(3.0, deal.tgr)) / 0.25 * 4, `Perpetual growth ${st.tgr.toFixed(2)}% beats long-run GDP`);
   if (st.sens > 0.5) add((st.sens - 0.5) / 0.25 * 6, `WACC sensitivity of ±${st.sens.toFixed(2)}% (street is ±0.50%)`);
   if (st.case === 'upside') add(15, `Used the ${deal.cases.upside.label} nobody approved`);
   if (st.case === 'downside') add(12, `Swapped in your own ${deal.cases.downside.label}`);
@@ -412,8 +413,8 @@ function moves(deal, st, diff) {
   };
   step('wacc', 0.25, 0, deal.wacc + diff.waccBand, 'wacc');
   step('wacc', -0.25, deal.wacc - diff.waccBand, 99, 'wacc');
-  step('tgr', 0.25, -99, diff.tgrMax, 'tgr');
-  step('tgr', -0.25, Math.min(diff.tgrMin, deal.tgr - 1), 99, 'tgr');
+  step('tgr', 0.25, -99, deal.tgr + diff.tgrBand, 'tgr');
+  step('tgr', -0.25, deal.tgr - diff.tgrBand, 99, 'tgr');
   step('sens', 0.25, 0, diff.sensMax, 'sens');
   step('sens', -0.25, 0.25, 99, 'sens');
   if (!diff.casesLocked) ['base', 'upside', 'downside'].forEach(c => { if (c !== st.case) { const n = clone(); n.case = c; out.push({ kind: 'case', act: 'case:' + c, label: 'case ' + c, st: n, cost: COST.case }); } });

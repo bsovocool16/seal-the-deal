@@ -94,6 +94,7 @@ b { color: inherit; }
 #fps { position: fixed; inset: 0; z-index: 60; background: #000; display: grid; place-items: center; padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); touch-action: none; user-select: none; -webkit-user-select: none; }
 .fps-wrap { position: relative; width: min(100vw, calc((100vh - 40px) * 1.6)); }
 #fps-cv { display: block; width: 100%; aspect-ratio: 16 / 10; image-rendering: pixelated; }
+#fps-hud { position: absolute; left: 0; top: 0; width: 100%; aspect-ratio: 16 / 10; pointer-events: none; }
 .fps-help { font-size: 16px; color: #7d8aa8; text-align: center; margin: 6px 8px 0; }
 .fps-touch { display: none; }
 @media (pointer: coarse) {
@@ -359,9 +360,9 @@ table.num tr.off td { color: #a39a85; text-decoration: line-through; }
 // All $ in millions except per-share values.
 
 const DIFF = {
-  easy:   { key: 'easy',   label: 'EASY',   sub: 'Summer Analyst', minutes: 540, need: 2, needDcf: false, cushion: 0.1, plausMin: 40, waccBand: 3.0, tgrMax: 4.5, tgrMin: 0.0, sensMax: 1.5, casesLocked: false, minMaxOK: true,  penMult: 1.0, startTime: 22 * 60 },
-  medium: { key: 'medium', label: 'MEDIUM', sub: 'First-Year Analyst', minutes: 360, need: 2, needDcf: true,  cushion: 0.3, plausMin: 55, waccBand: 2.0, tgrMax: 3.75, tgrMin: 0.5, sensMax: 1.0, casesLocked: false, minMaxOK: true,  penMult: 1.25,  startTime: 25 * 60 },
-  hard:   { key: 'hard',   label: 'HARD',   sub: 'Third-Year (Up for Associate)', minutes: 300, need: 3, needDcf: true,  cushion: 0.3, plausMin: 60, waccBand: 1.25, tgrMax: 3.25, tgrMin: 1.0, sensMax: 0.75, casesLocked: true,  minMaxOK: false, penMult: 1.5,  startTime: 26 * 60 },
+  easy:   { key: 'easy',   label: 'EASY',   sub: 'Summer Analyst', minutes: 540, need: 2, needDcf: false, cushion: 0.1, plausMin: 40, waccBand: 3.0, tgrBand: 1.5, sensMax: 1.5, casesLocked: false, minMaxOK: true,  penMult: 1.0, startTime: 22 * 60 },
+  medium: { key: 'medium', label: 'MEDIUM', sub: 'First-Year Analyst', minutes: 360, need: 2, needDcf: true,  cushion: 0.3, plausMin: 55, waccBand: 2.0, tgrBand: 1.0, sensMax: 1.0, casesLocked: false, minMaxOK: true,  penMult: 1.25,  startTime: 25 * 60 },
+  hard:   { key: 'hard',   label: 'HARD',   sub: 'Third-Year (Up for Associate)', minutes: 300, need: 3, needDcf: true,  cushion: 0.3, plausMin: 60, waccBand: 1.25, tgrBand: 1.0, sensMax: 0.75, casesLocked: true,  minMaxOK: false, penMult: 1.5,  startTime: 26 * 60 },
 };
 
 // Minutes each kind of action costs on the clock.
@@ -466,7 +467,7 @@ const DEALS = [
     shares: 80, netDebt: 600,
     ltmRev: 2400, ltmMargin: 0.105, sbcPct: 0.006, sbcDefault: 'cash',
     da: 0.025, capex: 0.03, nwc: 0.08, tax: 0.25,
-    wacc: 9.0, tgr: 2.5,
+    wacc: 9.0, tgr: 2.0,
     cases: {
       base:     { label: 'Management Base', growth: [0.08, 0.08, 0.07, 0.06, 0.05], margin: [0.110, 0.115, 0.120, 0.125, 0.130] },
       upside:   { label: 'Board Retreat Case', growth: [0.12, 0.12, 0.10, 0.09, 0.08], margin: [0.12, 0.13, 0.14, 0.145, 0.15] },
@@ -511,7 +512,7 @@ const DEALS = [
     shares: 150, netDebt: 4200,
     ltmRev: 4000, ltmMargin: 0.30, sbcPct: 0.005, sbcDefault: 'cash',
     da: 0.12, capex: 0.11, nwc: 0.02, tax: 0.25,
-    wacc: 8.0, tgr: -1.0,
+    wacc: 8.0, tgr: -0.25,
     cases: {
       base:     { label: 'Management Base', growth: [-0.05, -0.05, -0.04, -0.04, -0.03], margin: [0.30, 0.30, 0.295, 0.29, 0.29] },
       upside:   { label: '"Landline Renaissance" Case', growth: [0.00, 0.01, 0.02, 0.02, 0.02], margin: [0.31, 0.32, 0.33, 0.33, 0.33] },
@@ -699,9 +700,10 @@ function plausibility(deal, st, diff) {
   const add = (pen, text) => { if (pen > 0.01) items.push({ pen, text }); };
   const dw = Math.abs(st.wacc - deal.wacc);
   add(Math.max(0, dw - 0.5) / 0.25 * 5, `WACC ${st.wacc.toFixed(2)}% vs. CAPM ${deal.wacc.toFixed(2)}%`);
-  if (st.tgr > 3.0) add((st.tgr - 3.0) / 0.25 * 6, `Perpetual growth ${st.tgr.toFixed(2)}% beats long-run GDP`);
-  const tgrFloor = Math.min(1.5, deal.tgr - 0.5);
-  if (st.tgr < tgrFloor) add((tgrFloor - st.tgr) / 0.25 * 4, `Perpetual growth ${st.tgr.toFixed(2)}% is gloomier than the company's own outlook`);
+  const dg = st.tgr - deal.tgr;
+  if (dg > 0.5) add((dg - 0.5) / 0.25 * 4, `Perpetual growth ${st.tgr.toFixed(2)}% vs. ${deal.tgr.toFixed(2)}% in the long-range plan`);
+  if (dg < -0.5) add((-dg - 0.5) / 0.25 * 4, `Perpetual growth ${st.tgr.toFixed(2)}% is gloomier than the company's own ${deal.tgr.toFixed(2)}% outlook`);
+  if (st.tgr > 3.0 && dg > 0) add((st.tgr - Math.max(3.0, deal.tgr)) / 0.25 * 4, `Perpetual growth ${st.tgr.toFixed(2)}% beats long-run GDP`);
   if (st.sens > 0.5) add((st.sens - 0.5) / 0.25 * 6, `WACC sensitivity of ±${st.sens.toFixed(2)}% (street is ±0.50%)`);
   if (st.case === 'upside') add(15, `Used the ${deal.cases.upside.label} nobody approved`);
   if (st.case === 'downside') add(12, `Swapped in your own ${deal.cases.downside.label}`);
@@ -769,8 +771,8 @@ function moves(deal, st, diff) {
   };
   step('wacc', 0.25, 0, deal.wacc + diff.waccBand, 'wacc');
   step('wacc', -0.25, deal.wacc - diff.waccBand, 99, 'wacc');
-  step('tgr', 0.25, -99, diff.tgrMax, 'tgr');
-  step('tgr', -0.25, Math.min(diff.tgrMin, deal.tgr - 1), 99, 'tgr');
+  step('tgr', 0.25, -99, deal.tgr + diff.tgrBand, 'tgr');
+  step('tgr', -0.25, deal.tgr - diff.tgrBand, 99, 'tgr');
   step('sens', 0.25, 0, diff.sensMax, 'sens');
   step('sens', -0.25, 0.25, 99, 'sens');
   if (!diff.casesLocked) ['base', 'upside', 'downside'].forEach(c => { if (c !== st.case) { const n = clone(); n.case = c; out.push({ kind: 'case', act: 'case:' + c, label: 'case ' + c, st: n, cost: COST.case }); } });
@@ -1223,7 +1225,8 @@ const FPS = (function () {
   };
 
   // ---------- state ----------
-  let cv, ctx, img, buf, zbuf, overlay, running = false, raf = 0, last = 0;
+  const HS = 4; // HUD canvas is drawn at 4x so text stays crisp
+  let cv, ctx, hcv, hctx, img, buf, zbuf, overlay, running = false, raf = 0, last = 0;
   let L, map, mw, mh, P, ents, projs, items, keys = {}, tch = {}, msgs = [], opts, stats, flash = 0, hurt = 0, bob = 0, faceT = 0, grin = 0, done = false, doneT = 0, exitMsgT = 0;
 
   const solid = (x, y) => { const c = map[y] && map[y][x]; return c === undefined || TILE_TEX[c] !== undefined; };
@@ -1476,6 +1479,11 @@ const FPS = (function () {
   }
 
   function drawHUD() {
+    const main = ctx; ctx = hctx;
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, hcv.width, hcv.height); ctx.setTransform(HS, 0, 0, HS, 0, 0);
+    try { hud(); } finally { ctx = main; }
+  }
+  function hud() {
     ctx.font = '8px "Press Start 2P", monospace';
     const box = (x, w, label, val, col) => {
       ctx.fillStyle = '#0d1220'; ctx.fillRect(x, VH + 3, w, 34);
@@ -1525,14 +1533,15 @@ const FPS = (function () {
   function buildOverlay() {
     overlay = document.createElement('div');
     overlay.id = 'fps'; overlay.hidden = true;
-    overlay.innerHTML = `<div class="fps-wrap"><canvas id="fps-cv" width="${W}" height="${H}"></canvas>
+    overlay.innerHTML = `<div class="fps-wrap"><canvas id="fps-cv" width="${W}" height="${H}"></canvas><canvas id="fps-hud" width="${W * HS}" height="${H * HS}"></canvas>
       <div class="fps-touch" aria-hidden="true">
         <div class="fps-pad"><button data-k="f">▲</button><button data-k="tl">◀</button><button data-k="tr">▶</button><button data-k="b">▼</button></div>
         <div class="fps-act"><button data-k="g">⇄</button><button data-k="fire" class="fire">FIRE</button></div>
       </div>
       <p class="fps-help">W/S or ↑/↓ move · ←/→ turn · A/D strafe · SPACE fire · 1/2 switch · reach the green FAIR stamp</p></div>`;
     document.body.appendChild(overlay);
-    cv = overlay.querySelector('canvas'); ctx = cv.getContext('2d');
+    cv = overlay.querySelector('#fps-cv'); ctx = cv.getContext('2d');
+    hcv = overlay.querySelector('#fps-hud'); hctx = hcv.getContext('2d');
     img = ctx.createImageData(W, H); buf = new Uint32Array(img.data.buffer); zbuf = new Float32Array(W);
     overlay.querySelectorAll('[data-k]').forEach((b) => {
       const k = b.dataset.k;
@@ -1916,7 +1925,7 @@ const FPS = (function () {
     const d = D(), deal = DEAL();
     const v = Math.round((st[field] + delta) * 100) / 100;
     if (field === 'wacc') { if (Math.abs(v - deal.wacc) > d.waccBand + 1e-9) return false; if (v - st.sens - (st.tgr + 0.25) < 1.5) return false; }
-    if (field === 'tgr') { if (v > d.tgrMax + 1e-9 || v < Math.min(d.tgrMin, deal.tgr - 1) - 1e-9) return false; if (st.wacc - st.sens - (v + 0.25) < 1.5) return false; }
+    if (field === 'tgr') { if (Math.abs(v - deal.tgr) > d.tgrBand + 1e-9) return false; if (st.wacc - st.sens - (v + 0.25) < 1.5) return false; }
     if (field === 'sens') { if (v > d.sensMax + 1e-9 || v < 0.25 - 1e-9) return false; if (st.wacc - v - (st.tgr + 0.25) < 1.5) return false; }
     return true;
   };
@@ -2124,7 +2133,7 @@ const FPS = (function () {
         <div class="lever${d.casesLocked ? ' locked' : ''}"><div class="lh"><span>Projection case</span>${costTag('case')}</div><div class="seg">${cases}</div>
           <div class="note">${d.casesLocked ? 'LOCKED: the board already approved the Management Base case.' : 'Swapping cases means re-running the whole model.'}</div></div>
         ${stepper('wacc', 'WACC', `CAPM says ${deal.wacc.toFixed(2)}%. Allowed ${(deal.wacc - d.waccBand).toFixed(2)}–${(deal.wacc + d.waccBand).toFixed(2)}%. Free zone ±0.50%.`, Math.abs(st.wacc - deal.wacc) > 0.5)}
-        ${stepper('tgr', 'Terminal growth', `Cap ${d.tgrMax.toFixed(2)}% on ${d.label}. Above 3.00% the committee starts asking questions.`, st.tgr > 3)}
+        ${stepper('tgr', 'Terminal growth', `Long-range plan says ${deal.tgr.toFixed(2)}%. Allowed ${(deal.tgr - d.tgrBand).toFixed(2)}–${(deal.tgr + d.tgrBand).toFixed(2)}%. Free zone ±0.50%.`, Math.abs(st.tgr - deal.tgr) > 0.5 || st.tgr > 3)}
         ${stepper('sens', 'WACC sensitivity (bar width)', `Street standard is ±0.50%. Max ±${d.sensMax.toFixed(2)}% on ${d.label}.`, st.sens > 0.5)}
         <div class="lever"><div class="lh"><span>Stock-based comp</span>${costTag('sbc')}</div><div class="seg">
           <button class="pbtn ${sbcCash ? 'on' : 'alt'}" data-act="sbc:cash">Real expense</button><button class="pbtn ${!sbcCash ? 'on' : 'alt'}" data-act="sbc:addback">Add it back</button></div>

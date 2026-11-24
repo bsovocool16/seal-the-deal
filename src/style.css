@@ -69,6 +69,7 @@ b { color: inherit; }
 #fps { position: fixed; inset: 0; z-index: 60; background: #000; display: grid; place-items: center; padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); touch-action: none; user-select: none; -webkit-user-select: none; }
 .fps-wrap { position: relative; width: min(100vw, calc((100vh - 40px) * 1.6)); }
 #fps-cv { display: block; width: 100%; aspect-ratio: 16 / 10; image-rendering: pixelated; }
+#fps-hud { position: absolute; left: 0; top: 0; width: 100%; aspect-ratio: 16 / 10; pointer-events: none; }
 .fps-help { font-size: 16px; color: #7d8aa8; text-align: center; margin: 6px 8px 0; }
 .fps-touch { display: none; }
 @media (pointer: coarse) {

@@ -234,7 +234,8 @@ const FPS = (function () {
   };
 
   // ---------- state ----------
-  let cv, ctx, img, buf, zbuf, overlay, running = false, raf = 0, last = 0;
+  const HS = 4; // HUD canvas is drawn at 4x so text stays crisp
+  let cv, ctx, hcv, hctx, img, buf, zbuf, overlay, running = false, raf = 0, last = 0;
   let L, map, mw, mh, P, ents, projs, items, keys = {}, tch = {}, msgs = [], opts, stats, flash = 0, hurt = 0, bob = 0, faceT = 0, grin = 0, done = false, doneT = 0, exitMsgT = 0;
 
   const solid = (x, y) => { const c = map[y] && map[y][x]; return c === undefined || TILE_TEX[c] !== undefined; };
@@ -487,6 +488,11 @@ const FPS = (function () {
   }
 
   function drawHUD() {
+    const main = ctx; ctx = hctx;
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, hcv.width, hcv.height); ctx.setTransform(HS, 0, 0, HS, 0, 0);
+    try { hud(); } finally { ctx = main; }
+  }
+  function hud() {
     ctx.font = '8px "Press Start 2P", monospace';
     const box = (x, w, label, val, col) => {
       ctx.fillStyle = '#0d1220'; ctx.fillRect(x, VH + 3, w, 34);
@@ -536,14 +542,15 @@ const FPS = (function () {
   function buildOverlay() {
     overlay = document.createElement('div');
     overlay.id = 'fps'; overlay.hidden = true;
-    overlay.innerHTML = `<div class="fps-wrap"><canvas id="fps-cv" width="${W}" height="${H}"></canvas>
+    overlay.innerHTML = `<div class="fps-wrap"><canvas id="fps-cv" width="${W}" height="${H}"></canvas><canvas id="fps-hud" width="${W * HS}" height="${H * HS}"></canvas>
       <div class="fps-touch" aria-hidden="true">
         <div class="fps-pad"><button data-k="f">▲</button><button data-k="tl">◀</button><button data-k="tr">▶</button><button data-k="b">▼</button></div>
         <div class="fps-act"><button data-k="g">⇄</button><button data-k="fire" class="fire">FIRE</button></div>
       </div>
       <p class="fps-help">W/S or ↑/↓ move · ←/→ turn · A/D strafe · SPACE fire · 1/2 switch · reach the green FAIR stamp</p></div>`;
     document.body.appendChild(overlay);
-    cv = overlay.querySelector('canvas'); ctx = cv.getContext('2d');
+    cv = overlay.querySelector('#fps-cv'); ctx = cv.getContext('2d');
+    hcv = overlay.querySelector('#fps-hud'); hctx = hcv.getContext('2d');
     img = ctx.createImageData(W, H); buf = new Uint32Array(img.data.buffer); zbuf = new Float32Array(W);
     overlay.querySelectorAll('[data-k]').forEach((b) => {
       const k = b.dataset.k;

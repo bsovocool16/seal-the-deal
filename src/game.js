@@ -351,7 +351,7 @@
     const d = D(), deal = DEAL();
     const v = Math.round((st[field] + delta) * 100) / 100;
     if (field === 'wacc') { if (Math.abs(v - deal.wacc) > d.waccBand + 1e-9) return false; if (v - st.sens - (st.tgr + 0.25) < 1.5) return false; }
-    if (field === 'tgr') { if (v > d.tgrMax + 1e-9 || v < Math.min(d.tgrMin, deal.tgr - 1) - 1e-9) return false; if (st.wacc - st.sens - (v + 0.25) < 1.5) return false; }
+    if (field === 'tgr') { if (Math.abs(v - deal.tgr) > d.tgrBand + 1e-9) return false; if (st.wacc - st.sens - (v + 0.25) < 1.5) return false; }
     if (field === 'sens') { if (v > d.sensMax + 1e-9 || v < 0.25 - 1e-9) return false; if (st.wacc - v - (st.tgr + 0.25) < 1.5) return false; }
     return true;
   };
@@ -559,7 +559,7 @@
         <div class="lever${d.casesLocked ? ' locked' : ''}"><div class="lh"><span>Projection case</span>${costTag('case')}</div><div class="seg">${cases}</div>
           <div class="note">${d.casesLocked ? 'LOCKED: the board already approved the Management Base case.' : 'Swapping cases means re-running the whole model.'}</div></div>
         ${stepper('wacc', 'WACC', `CAPM says ${deal.wacc.toFixed(2)}%. Allowed ${(deal.wacc - d.waccBand).toFixed(2)}–${(deal.wacc + d.waccBand).toFixed(2)}%. Free zone ±0.50%.`, Math.abs(st.wacc - deal.wacc) > 0.5)}
-        ${stepper('tgr', 'Terminal growth', `Cap ${d.tgrMax.toFixed(2)}% on ${d.label}. Above 3.00% the committee starts asking questions.`, st.tgr > 3)}
+        ${stepper('tgr', 'Terminal growth', `Long-range plan says ${deal.tgr.toFixed(2)}%. Allowed ${(deal.tgr - d.tgrBand).toFixed(2)}–${(deal.tgr + d.tgrBand).toFixed(2)}%. Free zone ±0.50%.`, Math.abs(st.tgr - deal.tgr) > 0.5 || st.tgr > 3)}
         ${stepper('sens', 'WACC sensitivity (bar width)', `Street standard is ±0.50%. Max ±${d.sensMax.toFixed(2)}% on ${d.label}.`, st.sens > 0.5)}
         <div class="lever"><div class="lh"><span>Stock-based comp</span>${costTag('sbc')}</div><div class="seg">
           <button class="pbtn ${sbcCash ? 'on' : 'alt'}" data-act="sbc:cash">Real expense</button><button class="pbtn ${!sbcCash ? 'on' : 'alt'}" data-act="sbc:addback">Add it back</button></div>
