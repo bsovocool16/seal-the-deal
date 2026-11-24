@@ -36,6 +36,16 @@
     bad: () => { tone(160, 0.18, 'sawtooth', 0.07); setTimeout(() => tone(110, 0.3, 'sawtooth', 0.07), 160); },
     note: () => { tone(880, 0.07, 'square', 0.04); setTimeout(() => tone(1175, 0.09, 'square', 0.04), 80); },
     win: () => [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => tone(f, 0.12, 'square', 0.05), i * 110)),
+    fps: (k) => ({
+      shot: () => { tone(220, 0.06, 'square', 0.05, -120); tone(1400, 0.03, 'sawtooth', 0.02, -900); },
+      shotgun: () => { tone(120, 0.18, 'sawtooth', 0.09, -80); tone(60, 0.2, 'square', 0.06); },
+      enemy: () => tone(520, 0.08, 'triangle', 0.03, 200),
+      hurt: () => tone(140, 0.15, 'sawtooth', 0.07, -60),
+      down: () => { tone(300, 0.08, 'square', 0.05, -200); setTimeout(() => tone(150, 0.2, 'square', 0.05, -100), 80); },
+      pickup: () => { tone(988, 0.06, 'square', 0.04); setTimeout(() => tone(1319, 0.08, 'square', 0.04), 60); },
+      win: () => [523, 659, 784, 1047, 1319].forEach((f, i) => setTimeout(() => tone(f, 0.12, 'square', 0.05), i * 100)),
+      lose: () => [392, 330, 262, 196].forEach((f, i) => setTimeout(() => tone(f, 0.2, 'sawtooth', 0.05), i * 160)),
+    }[k] || (() => {}))(),
   };
 
   // ---------- music ----------
@@ -620,8 +630,9 @@
     showModal(`<h2>FAIRNESS COMMITTEE: KICKED BACK</h2><p>The committee met for 30 minutes (charged to your clock) and had notes:</p>
       <ul class="rejects">${reasons.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>
       <p class="scribble">"Come back when it's fair. Or when it looks fair. Either is fine." — Committee chair</p>
-      <div class="modal-actions"><button class="pbtn" id="m-ok">BACK TO THE DESK</button></div>`);
+      <div class="modal-actions"><button class="pbtn" id="m-ok">BACK TO THE DESK</button>${typeof FPS !== 'undefined' ? '<button class="pbtn alt doom-btn" id="m-doom">THIS CAN\'T BE THE END...</button>' : ''}</div>`);
     $('m-ok').onclick = () => { hideModal(); render(); if (G.spent >= D().minutes) takeover(); };
+    if ($('m-doom')) $('m-doom').onclick = () => { sfx.click(); preFight(); };
   }
 
   function dealPoints(pl, takeoverFlag) {
@@ -645,19 +656,65 @@
       <div class="bigstamp${md ? ' md' : ''}">${md ? 'FAIR!!' : 'FAIR'}</div></div>`;
   }
 
-  function approve(md) {
+  // ---------- Super Seal the Deal: committee defense ----------
+  const FPS_DMG = { easy: 0.6, medium: 0.9, hard: 1.2 };
+  const fightHp = (pl) => clamp(Math.round(40 + pl * 0.6), 40, 100);
+  const fightAmmo = () => 15 + Math.floor(Math.max(0, D().minutes - G.spent) / 10);
+  function withFightMusic(on) {
+    if (typeof Music === 'undefined' || track === 'off') return;
+    if (on) Music.play('crunch'); else Music.play(track);
+  }
+  function preFight() {
+    const deal = DEAL(), d = D(), pl = plausibility(deal, G.st, d);
+    G.over = true;
+    const lvl = FPS.LEVELS[G.dealIdx % FPS.LEVELS.length];
+    const boss = G.dealIdx === DEALS.length - 1;
+    say(boss ? 'You\'re going to the BOARDROOM? Over MY deal? ...Go. GO.' : 'You\'re going UP there? Fine. DEFEND IT.', true);
+    showModal(`<h2>SUPER SEAL THE DEAL</h2>
+      <p>The committee said no. You refuse to accept that. Take the elevator to <b>${esc(lvl.name)}</b>, overrule every objection between you and the green <b>FAIR</b> stamp, and the opinion goes out as is.${boss ? ' The Committee Chair is waiting in the boardroom. The stamp stays locked until the Chair is overruled.' : ''} If you fall, you wake up back at your desk with less time on the clock.</p>
+      <div class="score"><span>Credibility (from your smell test ${pl.score})</span><span class="g">${fightHp(pl.score)}%</span>
+        <span>Footnotes (from ${Math.max(0, d.minutes - G.spent)} min left)</span><span class="g">${fightAmmo()}</span></div>
+      <p class="hint">Keyboard: W/S or arrows to move, ←/→ to turn, A/D to strafe, SPACE to fire, 1/2 to switch weapons. On a phone, use the on-screen pad.</p>
+      <div class="modal-actions"><button class="pbtn" id="m-fight">TAKE THE ELEVATOR</button><button class="pbtn alt" id="m-skip">ACTUALLY, BACK TO THE DESK</button></div>`);
+    $('m-fight').onclick = () => {
+      hideModal(); withFightMusic(true);
+      FPS.start({ level: G.dealIdx, hp: fightHp(pl.score), ammo: fightAmmo(), enemyDmg: FPS_DMG[d.key], sfx: sfx.fps,
+        intro: boss ? 'OVERRULE THE CHAIR' : 'REACH THE FAIR STAMP',
+        onEnd: (s) => { withFightMusic(false); if (s.win) approve(false, s); else lostFight(s); } });
+    };
+    $('m-skip').onclick = () => { hideModal(); G.over = false; render(); if (G.spent >= D().minutes) takeover(); };
+  }
+  function lostFight(s) {
+    G.over = false; G.spent += 30;
+    say('You got BURIED in redlines. Fix the model. NOW.', true);
+    sfx.bad();
+    showModal(`<h2>BURIED IN REDLINES</h2><p>You overruled ${s.kills} objection${s.kills === 1 ? '' : 's'} before the committee papered you into a corner. HR walked you back to your desk. That cost another 30 minutes.</p>
+      <div class="modal-actions"><button class="pbtn" id="m-ok">BACK TO THE DESK</button></div>`);
+    $('m-ok').onclick = () => { hideModal(); render(); if (G.spent >= D().minutes) takeover(); };
+  }
+
+  function approve(md, fight) {
     const deal = DEAL(), d = D(), pl = plausibility(deal, G.st, d);
     G.over = true; G.lastFair = true;
-    const sc = dealPoints(pl.score, md);
+    const lostFight = fight && !fight.skipped && !fight.win;
+    const sc = lostFight ? dealPoints(pl.score, false) : dealPoints(pl.score, md);
+    if (fight && fight.win) { sc.fight = 100 + fight.pts; sc.pts = Math.min(sc.pts + sc.fight, 599); } // overruling by force caps at C
+    if (fight && fight.skipped) { sc.pts -= 150; }
+    if (lostFight) { sc.pts = Math.max(50, sc.pts - 250); }
+    if (fight) {
+      sc.grade = lostFight ? 'F' : sc.pts >= 700 ? 'A' : sc.pts >= 600 ? 'B' : sc.pts >= 480 ? 'C' : 'D';
+      sc.label = lostFight ? 'Buried in redlines; MD signed over you' : fight.skipped ? 'MD "handled" the committee' : { A: 'Committee overruled by force', B: 'Committee overruled by force', C: 'Committee overruled by force', D: 'Barely overruled the committee' }[sc.grade];
+    }
     G.results.push({ id: deal.id, name: deal.name, pts: sc.pts, grade: sc.grade, plaus: md ? 0 : pl.score, md, spent: G.spent });
     if (md) { sfx.bad(); setTimeout(sfx.stamp, 400); say(pick(LINES.takeover), true); }
     else { sfx.stamp(); setTimeout(sfx.win, 300); say(pick(LINES.approve)); }
     const last = G.dealIdx === DEALS.length - 1;
-    showModal(`<h2>${md ? 'TIME\'S UP. THE MD GRABBED THE PEN.' : 'FAIRNESS COMMITTEE: APPROVED'}</h2>
-      ${md ? '<p>It is 7:00 AM. The board is dialing in. Holloway storms over, rips the draft out of the printer and stamps it himself.</p>' : '<p>The committee approved it in four minutes. Two members were on mute.</p>'}
+    showModal(`<h2>${lostFight ? 'YOU WERE BURIED IN REDLINES' : md ? 'TIME\'S UP. THE MD GRABBED THE PEN.' : fight && fight.win ? 'COMMITTEE OVERRULED' : 'FAIRNESS COMMITTEE: APPROVED'}</h2>
+      ${lostFight ? '<p>You wake up under a pile of marked-up drafts. Holloway steps over you, uncaps a pen and signs it himself.</p>' : fight && fight.win ? `<p>You fought through the committee floor. Objections overruled: ${fight.kills}. The stamp came down hard.</p>` : md ? '<p>It is 7:00 AM. The board is dialing in. Holloway storms over, rips the draft out of the printer and stamps it himself.</p>' : '<p>The committee approved it in four minutes. Two members were on mute.</p>'}
       ${letterHtml(deal, pl, md)}
       <div class="score"><span>Grade</span><span class="g">${sc.grade}</span><span>Verdict</span><span>${esc(sc.label)}</span>
         ${md ? '' : `<span>Time left</span><span>${Math.max(0, D().minutes - G.spent)} min</span><span>Smell test</span><span>${pl.score}</span><span>Kick-backs</span><span>${G.rejections}</span>`}
+        ${sc.fight ? `<span>Committee defense bonus</span><span>+${sc.fight}</span>` : ''}
         <span>Points</span><span>${sc.pts}</span></div>
       <div class="modal-actions"><button class="pbtn" id="m-next">${last ? 'SEE YOUR BONUS' : 'NEXT DEAL'}</button></div>`);
     $('m-next').onclick = () => { hideModal(); if (last) finale(); else startDeal(G.dealIdx + 1); };
@@ -758,6 +815,24 @@
   $('btn-submit').addEventListener('click', submit);
   $('btn-mute').addEventListener('click', () => { muted = !muted; store.set('muted', muted); renderHud(); });
   $('btn-music').addEventListener('click', () => cycleTrack(1));
+  $('btn-doom').addEventListener('click', () => { sfx.click(); doomwad(0, 100, 30, 0, 0); });
+  function doomwad(i, hp, ammo, kills, pts) {
+    $('scr-title').hidden = true;
+    if (typeof Music !== 'undefined' && track !== 'off') Music.play('crunch');
+    FPS.start({ level: i, hp, ammo, enemyDmg: 0.9, sfx: sfx.fps, intro: i === FPS.LEVELS.length - 1 ? 'OVERRULE THE CHAIR' : 'REACH THE FAIR STAMP',
+      onEnd: (s) => {
+        kills += s.kills; pts += s.win ? s.pts + 100 : s.pts;
+        const lastLvl = i === FPS.LEVELS.length - 1;
+        if (s.win && !lastLvl) { doomwad(i + 1, Math.min(100, s.hpLeft + 10), s.ammoLeft + 5, kills, pts); return; }
+        $('scr-title').hidden = false;
+        if (typeof Music !== 'undefined' && track !== 'off') Music.play(track);
+        showModal(`<h2>${s.win ? 'THE COMMITTEE HAS BEEN OVERRULED' : 'BURIED IN REDLINES'}</h2>
+          <p>${s.win ? 'Every floor cleared. The Chair is face-down in a board book. The deal is fair.' : 'You fell on ' + esc(FPS.LEVELS[i].name) + '. The MD signed it anyway. It is always fair.'}</p>
+          <div class="score"><span>Floors cleared</span><span>${s.win ? i + 1 : i} / ${FPS.LEVELS.length}</span><span>Objections overruled</span><span>${kills}</span><span>Points</span><span class="g">${pts}</span></div>
+          <div class="modal-actions"><button class="pbtn" id="m-ok">BACK TO THE DESK</button></div>`);
+        $('m-ok').onclick = () => { hideModal(); renderDiffs(); };
+      } });
+  }
   $('mus-next').addEventListener('click', () => cycleTrack(1));
   $('mus-prev').addEventListener('click', () => cycleTrack(-1));
   $('mus-name').addEventListener('click', () => {

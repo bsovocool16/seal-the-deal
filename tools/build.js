@@ -7,6 +7,7 @@ let tpl = src('index.html')
   .replace('/*STYLE*/', () => src('style.css'))
   .replace('/*ENGINE*/', () => src('engine.js'))
   .replace('/*MUSIC*/', () => src('music.js'))
+  .replace('/*FPS*/', () => src('fps.js'))
   .replace('/*GAME*/', () => src('game.js'));
 const [head, body] = tpl.split('<!--BODY-->');
 const dist = path.join(__dirname, '..', 'dist');

@@ -147,24 +147,6 @@ const Music = (function () {
         { drums: true, seq: parse(rep(vDr, 13) + 't . t . t . R R R R R S') },
       ],
     },
-    hustle: {
-      name: 'Hustle Season', sub: 'trap-ish', gain: 0.9,
-      step: 60 / 142 / 4, len: 0,
-      parts: [
-        { inst: { wave: 'pulse25', vol: 0.13, chord: [-12], rel: 0.05 }, seq: parse(
-          'C5 - - . Eb5 - - . G5 - . . F5 - Eb5 - ' + 'D5 - - . Eb5 - - . C5 - - - . . . . ' +
-          'C5 - - . Eb5 - - . G5 - . . Ab5 - G5 - ' + 'F5 - - . Eb5 - D5 - C5 - - - . . G4 - ' +
-          'C6 - - . Bb5 - - . Ab5 - - . G5 - - - ' + 'Ab5 - - . G5 - - . Eb5 - - - D5 - - - ' +
-          'C6 - - . Bb5 - - . Ab5 - - . G5 - F5 - ' + 'Eb5 - D5 - C5 - - - - - - - . . . . ') },
-        { inst: { wave: 'sine', vol: 0.55, glideFrom: 12, rel: 0.12 }, seq: parse(
-          'C2 - - - - - - - . . C2 - Eb2 - - - ' + 'Ab1 - - - - - - - . . G1 - - - - - ' +
-          'C2 - - - - - - - . . C2 - Eb2 - - - ' + 'F1 - - - - - - - G1 - - - - - - - ') },
-        { inst: { wave: 'square', vol: 0.03, rel: 0.02, pluck: 0.05 }, seq: parse(rep('C4 . G4 . Eb4 . G4 . C4 . G4 . Eb4 . G4 .', 2) + ' ' + rep('Ab3 . Eb4 . C4 . Eb4 . G3 . D4 . B3 . D4 .', 1) + ' ' + rep('C4 . G4 . Eb4 . G4 . C4 . G4 . Eb4 . G4 .', 1)) },
-        { drums: true, seq: parse('K . . . . . . . . . K . . . . . ' + 'K . . . . . . K . . K . . . . .') },
-        { drums: true, seq: parse('. . . . . . . . S . . . . . . . ') },
-        { drums: true, seq: parse('h h h h h h h h h h h h r r r r ' + 'h h h h h . h h z . z . h h o .') },
-      ],
-    },
     crunch: {
       name: 'Model Crunch', sub: 'demon-slaying metal', gain: 1.4,
       step: 60 / 168 / 4, len: 0,
@@ -188,7 +170,7 @@ const Music = (function () {
   Object.values(SONGS).forEach((s) => { s.len = Math.max(...s.parts.map((p) => p.seq.len)); });
 
   return {
-    list: ['valkyrie', 'hustle', 'crunch'],
+    list: ['valkyrie', 'crunch'],
     SONGS,
     play(id) {
       if (!SONGS[id]) { this.stop(); return; }
