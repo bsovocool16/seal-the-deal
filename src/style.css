@@ -267,3 +267,5 @@ table.num tr.off td { color: #a39a85; text-decoration: line-through; }
 .claim ol { margin: 6px 0 8px 20px; padding: 0; }
 .claim-ts { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; font-size: 18px; margin: 6px 0; overflow-wrap: anywhere; }
 .claim-ts span { color: var(--ink-soft); }
+.reset-btn { position: fixed; left: max(10px, env(safe-area-inset-left, 0px)); bottom: max(10px, env(safe-area-inset-bottom, 0px)); z-index: 30; background: rgba(13,18,32,.88) !important; }
+.reset-btn:hover, .reset-btn:focus-visible { color: #ffd84a; border-color: #ffd84a; }

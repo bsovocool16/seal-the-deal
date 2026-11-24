@@ -848,6 +848,15 @@
     if (df) { sfx.click(); if (track !== 'off') setTrack(track, true); start(df.dataset.diff); }
   });
   $('btn-submit').addEventListener('click', submit);
+  $('btn-reset').addEventListener('click', () => {
+    if (!G) return;
+    sfx.click();
+    showModal(`<h2>RESET?</h2><p>This throws away the current run. Holloway will act like it never happened. He'll be lying.</p>
+      <div class="modal-actions"><button class="pbtn alt" id="m-keep">KEEP WORKING</button><button class="pbtn" id="m-restart">START OVER (${esc(D().label)})</button><button class="pbtn alt" id="m-totitle">BACK TO TITLE</button></div>`);
+    $('m-keep').onclick = hideModal;
+    $('m-restart').onclick = () => { hideModal(); start(G.diff); };
+    $('m-totitle').onclick = () => { hideModal(); G = null; toTitle(); };
+  });
   $('btn-mute').addEventListener('click', () => { muted = !muted; store.set('muted', muted); renderHud(); });
   $('btn-music').addEventListener('click', () => cycleTrack(1));
   $('btn-doom').addEventListener('click', () => { sfx.click(); doomwad(0, 75, 30, 0, 0); });
