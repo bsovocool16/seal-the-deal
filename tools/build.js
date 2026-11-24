@@ -6,6 +6,7 @@ const src = (f) => fs.readFileSync(path.join(__dirname, '..', 'src', f), 'utf8')
 let tpl = src('index.html')
   .replace('/*STYLE*/', () => src('style.css'))
   .replace('/*ENGINE*/', () => src('engine.js'))
+  .replace('/*MUSIC*/', () => src('music.js'))
   .replace('/*GAME*/', () => src('game.js'));
 const [head, body] = tpl.split('<!--BODY-->');
 const dist = path.join(__dirname, '..', 'dist');

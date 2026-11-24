@@ -38,6 +38,28 @@
     win: () => [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => tone(f, 0.12, 'square', 0.05), i * 110)),
   };
 
+  // ---------- music ----------
+  const TRACKS = (typeof Music !== 'undefined' ? Music.list : []).concat(['off']);
+  let track = store.get('track') || 'valkyrie';
+  if (!TRACKS.includes(track)) track = 'valkyrie';
+  const trackName = (k) => (k === 'off' ? 'MUSIC OFF' : Music.SONGS[k].name);
+  function renderMusic() {
+    const playing = typeof Music !== 'undefined' && Music.playing;
+    const b = $('btn-music'); if (b) b.textContent = track === 'off' ? '♪ OFF' : '♪ ' + trackName(track).toUpperCase();
+    const n = $('mus-name');
+    if (n) { n.textContent = track === 'off' ? 'MUSIC OFF' : (playing ? '■ ' : '▶ ') + trackName(track) + ' · ' + Music.SONGS[track].sub; n.classList.toggle('on', !!playing); }
+  }
+  function setTrack(k, play) {
+    track = k; store.set('track', k);
+    if (typeof Music === 'undefined') return;
+    if (k === 'off') Music.stop(); else if (play) Music.play(k);
+    renderMusic();
+  }
+  function cycleTrack(dir) {
+    const i = (TRACKS.indexOf(track) + dir + TRACKS.length) % TRACKS.length;
+    setTrack(TRACKS[i], true);
+  }
+
   // ---------- game state ----------
   let G = null;
   function newRun(diffKey) {
@@ -287,6 +309,7 @@
     if (!$('scr-title').hidden) drawBoss($('boss-title'), 3, 2, t, (t % 5000) < 1200);
     if (!$('scr-game').hidden) {
       const md = mood();
+      if (typeof Music !== 'undefined') Music.setIntensity(G.over ? 0 : (timeFrac() - 0.65) / 0.35);
       drawBoss($('boss'), shouting ? Math.max(4, md.anger) : md.anger, md.dish, t, shouting);
       if (!G.over && t - lastNag > 22000 && $('modal').hidden) {
         const v = verdict(DEAL(), G.st, D());
@@ -392,7 +415,8 @@
     const left = 1 - timeFrac();
     const tb = $('hud-tbar'); tb.style.width = (left * 100) + '%'; tb.classList.toggle('low', left < 0.25);
     $('hud-dealno').textContent = (G.dealIdx + 1) + '/' + DEALS.length;
-    $('btn-mute').textContent = muted ? 'SND:OFF' : 'SND:ON';
+    $('btn-mute').textContent = muted ? 'SFX:OFF' : 'SFX:ON';
+    renderMusic();
   }
 
   function renderFF() {
@@ -729,16 +753,24 @@
     const a = e.target.closest('[data-act]');
     if (a && !a.disabled && G) { handle(a.dataset.act); return; }
     const df = e.target.closest('[data-diff]');
-    if (df) { sfx.click(); start(df.dataset.diff); }
+    if (df) { sfx.click(); if (track !== 'off') setTrack(track, true); start(df.dataset.diff); }
   });
   $('btn-submit').addEventListener('click', submit);
   $('btn-mute').addEventListener('click', () => { muted = !muted; store.set('muted', muted); renderHud(); });
+  $('btn-music').addEventListener('click', () => cycleTrack(1));
+  $('mus-next').addEventListener('click', () => cycleTrack(1));
+  $('mus-prev').addEventListener('click', () => cycleTrack(-1));
+  $('mus-name').addEventListener('click', () => {
+    if (track === 'off') { setTrack(Music.list[0], true); return; }
+    if (Music.playing) { Music.stop(); renderMusic(); } else setTrack(track, true);
+  });
   window.addEventListener('resize', drawDesk);
 
   // hot-reload friendliness inside the Claude viewer
   try { window.claude && window.claude.hot && window.claude.hot.snapshot && window.claude.hot.snapshot(() => ({ G })); } catch (e) { /* ignore */ }
   function boot(data) {
     renderDiffs();
+    renderMusic();
     if (data && data.G && data.G.st) { G = data.G; $('scr-title').hidden = true; $('scr-game').hidden = false; $('ff').dataset.deal = ''; render(); }
     requestAnimationFrame(loop);
     drawDesk();

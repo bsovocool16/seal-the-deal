@@ -56,6 +56,12 @@ b { color: inherit; }
 .diff-btn .best { font-family: var(--font-ty); font-size: 16px; color: var(--stamp); }
 .diff-btn.easy .d1 { color: var(--stamp); } .diff-btn.medium .d1 { color: var(--warn); } .diff-btn.hard .d1 { color: var(--redpen); }
 .fine { font-size: 16px; color: #8b93a8; text-align: center; margin: 0; }
+.jukebox { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: center; }
+.jukebox .lbl { font-family: var(--font-px); font-size: 8px; color: #7d8aa8; }
+.jukebox button { font-family: var(--font-ty); font-size: 19px; padding: 2px 8px; }
+.jb-name { min-width: 230px; color: var(--brass) !important; }
+.jb-name.on { border-color: var(--brass); }
+#btn-music { color: var(--brass); }
 .fine a, .credit a { color: var(--brass); }
 .credit { font-size: 16px; color: var(--ink-soft); margin-top: 10px; }
 a.pbtn { text-decoration: none; display: inline-block; }
