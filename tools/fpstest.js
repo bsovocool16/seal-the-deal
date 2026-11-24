@@ -20,7 +20,16 @@ const out = process.argv[2] || '.';
     return `${L.name}: ${w}x${m.length} badRows=${bad} closed=${edge} enemies=${targets.filter((t) => 'amB'.includes(t[2])).length} unreachable=[${unreach}]`;
   }).join('\n')));
   // doomwad only: play floor 1
-  await p.click('#btn-doom');
+  // (no title-screen shortcut anymore; chain the floors directly)
+  await p.evaluate(() => {
+    const run = (i, hp, ammo) => FPS.start({ level: i, hp, ammo, enemyDmg: 0.9, onEnd: (s) => {
+      if (s.win && i < FPS.LEVELS.length - 1) return run(i + 1, Math.min(75, s.hpLeft + 10), s.ammoLeft + 5);
+      document.getElementById('modal-inner').innerHTML = '<h2>' + (s.win ? 'ALL FLOORS CLEARED' : 'LOST') + '</h2><button id="m-ok">ok</button>';
+      document.getElementById('modal').hidden = false;
+      document.getElementById('m-ok').onclick = () => { document.getElementById('modal').hidden = true; };
+    } });
+    run(0, 75, 30);
+  });
   await p.waitForTimeout(600);
   await p.screenshot({ path: out + '/30-fps-start.png' });
   // walk forward + fire for a bit

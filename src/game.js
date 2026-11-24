@@ -859,24 +859,6 @@
   });
   $('btn-mute').addEventListener('click', () => { muted = !muted; store.set('muted', muted); renderHud(); });
   $('btn-music').addEventListener('click', () => cycleTrack(1));
-  $('btn-doom').addEventListener('click', () => { sfx.click(); doomwad(0, 75, 30, 0, 0); });
-  function doomwad(i, hp, ammo, kills, pts) {
-    $('scr-title').hidden = true;
-    if (typeof Music !== 'undefined' && track !== 'off') Music.play('crunch');
-    FPS.start({ level: i, hp, ammo, enemyDmg: 0.9, sfx: sfx.fps, intro: i === FPS.LEVELS.length - 1 ? 'OVERRULE THE CHAIR' : 'REACH THE FAIR STAMP',
-      onEnd: (s) => {
-        kills += s.kills; pts += s.win ? s.pts + 100 : s.pts;
-        const lastLvl = i === FPS.LEVELS.length - 1;
-        if (s.win && !lastLvl) { doomwad(i + 1, Math.min(75, s.hpLeft + 10), s.ammoLeft + 5, kills, pts); return; }
-        $('scr-title').hidden = false;
-        if (typeof Music !== 'undefined' && track !== 'off') Music.play(track);
-        showModal(`<h2>${s.win ? 'THE COMMITTEE HAS BEEN OVERRULED' : 'BURIED IN REDLINES'}</h2>
-          <p>${s.win ? 'Every floor cleared. The Chair is face-down in a board book. The deal is fair.' : 'You fell on ' + esc(FPS.LEVELS[i].name) + '. The MD signed it anyway. It is always fair.'}</p>
-          <div class="score"><span>Floors cleared</span><span>${s.win ? i + 1 : i} / ${FPS.LEVELS.length}</span><span>Objections overruled</span><span>${kills}</span><span>Points</span><span class="g">${pts}</span></div>
-          <div class="modal-actions"><button class="pbtn" id="m-ok">BACK TO THE DESK</button></div>`);
-        $('m-ok').onclick = () => { hideModal(); renderDiffs(); };
-      } });
-  }
   $('mus-next').addEventListener('click', () => cycleTrack(1));
   $('mus-prev').addEventListener('click', () => cycleTrack(-1));
   $('mus-name').addEventListener('click', () => {
